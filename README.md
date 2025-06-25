@@ -52,7 +52,6 @@ streamlit run app.py
 
 # Project Structure 
 
-AI_chatbot/
-├── app.py              # Streamlit UI
-├── rag_implement.py    # LangChain RAG setup (retriever, memory, LLM)
-├── clean_text.ipynb    # Notebook for PDF preprocessing
+app.py              # Streamlit UI
+rag_implement.py    # LangChain RAG setup (retriever, memory, LLM)
+clean_text.ipynb    # Notebook for PDF preprocessing
