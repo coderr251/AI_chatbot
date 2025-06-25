@@ -1,28 +1,28 @@
-# AI_chatbot
+# AI Chatbot
 
-This project implements a PDF-based AI chatbot using **LLaMA 3.2**, **LangChain**, and **Chroma** vector search. Users can upload a PDF, ask natural language questions, and receive context-aware responses through a simple web interface built with **Streamlit**.
-
----
-
-## Features
-
-- Upload and process any PDF document
-- Extracts, cleans, and chunks text for vector-based search
-- Embeds text and stores it using Chroma vector database
-- Enables document-specific chat using LLaMA 3.2 via Ollama
-- Supports multi-turn conversations with memory
-- Interactive web interface using Streamlit
+This project implements a Retrieval-Augmented Generation (RAG) based AI chatbot that allows users to upload a PDF and ask context-specific questions. Built with **LLaMA 3.2**, **LangChain**, and **Chroma**, the system processes documents, creates vector embeddings, and interacts through a conversational UI in **Streamlit**.
 
 ---
 
-## Tech Stack
+## Architecture and Flow
 
-- Python 3.11.13 (managed via `pyenv`)
-- [LangChain](https://python.langchain.com/)
-- [Ollama](https://ollama.com/) with the `llama3.2` model
-- [Chroma](https://www.trychroma.com/) for vector storage
-- [PyPDFLoader](https://api.python.langchain.com/en/latest/document_loaders/langchain_community.document_loaders.pdf.PyPDFLoader.html) for PDF parsing
-- Streamlit for the user interface
+```
+[PDF Upload] → [Text Cleaning + Chunking] → [Embeddings via LangChain] → [Chroma Vector Store]
+       ↓                                                       ↓
+[User Query] → [Retriever fetches relevant chunks] → [LLM generates answer using context]
+       ↓
+[Streaming Response shown in Streamlit Chat Interface]
+```
+
+---
+
+## Components Overview
+
+- **PDF Preprocessing**: Cleaned and chunked using LangChain's `PyPDFLoader` and `RecursiveCharacterTextSplitter`.
+- **Embeddings**: Generated using the default embedding model from LangChain (e.g., `HuggingFaceEmbeddings` or `Ollama embeddings`, as configured).
+- **Vector Store**: Stored in `Chroma`, enabling fast and semantic retrieval.
+- **LLM**: `llama3:instruct` run via local Ollama backend.
+- **Interface**: Built with Streamlit; supports streaming responses and multi-turn chat via LangChain memory.
 
 ---
 
@@ -42,20 +42,79 @@ pyenv install 3.11.13
 pyenv local 3.11.13
 
 python -m venv llms
-source llms/bin/activate  # On Windows, use llms\Scripts\activate
+source llms/bin/activate  # On Windows: llms\Scripts\activate
 
 pip install -r requirements.txt
 ```
 
-### 3. Start Ollama
+---
 
-Ensure Ollama is installed and the model is available:
+## Preprocessing & Embedding Pipeline
+
+### Step 1: Clean and Chunk PDF
+
+Handled via LangChain tools in `clean_text.ipynb` or embedded code:
+
+```python
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+loader = PyPDFLoader("yourfile.pdf")
+docs = loader.load()
+
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+chunks = text_splitter.split_documents(docs)
+```
+
+### Step 2: Create Embeddings and Store in Chroma
+
+```python
+from langchain.vectorstores import Chroma
+from langchain.embeddings import HuggingFaceEmbeddings  # or any other supported
+
+embedding = HuggingFaceEmbeddings()
+db = Chroma.from_documents(chunks, embedding, persist_directory="chroma_store")
+db.persist()
+```
+
+---
+
+## RAG Chatbot with Streaming
+
+### Step 3: Set Up RAG Chain with Streaming
+
+In `rag_implement.py`:
+
+```python
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
+from langchain_community.llms import Ollama
+
+llm = Ollama(model="llama3.2", streaming=True)
+retriever = db.as_retriever(search_kwargs={"k": 5})
+memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+
+rag_chain = ConversationalRetrievalChain.from_llm(
+    llm=llm,
+    retriever=retriever,
+    memory=memory,
+    return_source_documents=True
+)
+```
+
+---
+
+## Launch the Chatbot
+
+### Step 4: Start Ollama
+
+Ensure the model is installed:
 
 ```bash
 ollama run llama3:instruct
 ```
 
-### 4. Launch the Application
+### Step 5: Run the App
 
 ```bash
 streamlit run app.py
@@ -63,7 +122,26 @@ streamlit run app.py
 
 ---
 
+## Sample Queries
+
+```text
+1. What is the main topic of the document?
+2. Summarize section 2 of the PDF.
+3. Who is the author and what are their key points?
+```
+
+---
+
 ## Project Structure
+
+```
+AI_chatbot/
+├── app.py              # Streamlit UI
+├── rag_implement.py    # LangChain RAG setup
+├── clean_text.ipynb    # Preprocessing and chunking
+├── chroma_store/       # Vector store files
+```
+
 
 ```
 app.py              # Streamlit UI
