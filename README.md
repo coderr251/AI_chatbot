@@ -30,28 +30,44 @@ This project implements a PDF-based AI chatbot using **LLaMA 3.2**, **LangChain*
 
 ### 1. Clone the Repository
 
+```bash
 git clone https://github.com/yourusername/AI_chatbot.git
 cd AI_chatbot
+```
 
 ### 2. Set Up the Environment
 
+```bash
 pyenv install 3.11.13
 pyenv local 3.11.13
+
 python -m venv llms
-source llms/bin/activate  
+source llms/bin/activate  # On Windows, use llms\Scripts\activate
+
 pip install -r requirements.txt
+```
 
 ### 3. Start Ollama
+
 Ensure Ollama is installed and the model is available:
 
+```bash
 ollama run llama3:instruct
+```
 
 ### 4. Launch the Application
 
+```bash
 streamlit run app.py
+```
 
-# Project Structure 
+---
 
+## Project Structure
+
+```
 app.py              # Streamlit UI
 rag_implement.py    # LangChain RAG setup (retriever, memory, LLM)
 clean_text.ipynb    # Notebook for PDF preprocessing
+```
+
