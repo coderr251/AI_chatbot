@@ -149,3 +149,4 @@ rag_implement.py    # LangChain RAG setup (retriever, memory, LLM)
 clean_text.ipynb    # Notebook for PDF preprocessing
 ```
 
+![Demo](demo.gif)
